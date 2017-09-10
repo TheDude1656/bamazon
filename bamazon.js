@@ -16,7 +16,7 @@ var connection = mysql.createConnection({
 });
 
 // connect to the mysql server and sql database
-connection.connect(function(err) {
+connection.connect(function (err) {
   if (err) throw err;
   // run the start function after the connection is made to prompt the user
   start();
@@ -31,7 +31,7 @@ function start() {
       message: "Are you a customer or an administrator?",
       choices: ["Customer", "Administrator"]
     }])
-    .then(function(res) {
+    .then(function (res) {
       console.log(res.customerOrAdmin);
       if (res.customerOrAdmin === "Customer") {
         bamazonCustomer();
@@ -41,8 +41,6 @@ function start() {
     })
 };
 
-
-
 // function that starts if Customer is chosen in first question
 function bamazonCustomer() {
   console.log("________________________");
@@ -50,8 +48,8 @@ function bamazonCustomer() {
   console.log("|Starting Customer App!|");
   console.log("|                      |");
   console.log("________________________\n");
-  setTimeout(function() {
-    connection.query("SELECT * FROM products", function(err, results) {
+  setTimeout(function () {
+    connection.query("SELECT * FROM products", function (err, results) {
       if (err) throw err;
       console.log("Item |  Price | Stock");
       console.log("_____________________");
@@ -66,7 +64,7 @@ function bamazonCustomer() {
           .prompt([{
             type: "list",
             message: "Which item would you like to buy?",
-            choices: function() {
+            choices: function () {
               var itemsArr = [];
               for (var i = 0; i < results.length; i++) {
                 itemsArr.push(results[i].product_name);
@@ -77,13 +75,13 @@ function bamazonCustomer() {
           }, {
             type: "input",
             message: "How many would you like to buy?",
-            validate: function(amountbuy) {
+            validate: function (amountbuy) {
               var reg = /^\d+$/;
               return reg.test(amountbuy) || "This should be a number!";
             },
             name: "amountbuy"
           }])
-          .then(function(stuff) {
+          .then(function (stuff) {
             var pickedItem;
             for (var i = 0; i < results.length; i++) {
               if (results[i].product_name === stuff.itemlist) {
@@ -104,11 +102,25 @@ function bamazonCustomer() {
                 {
                   item_id: itemSelected
                 }
-              ], function(err) {
+              ], function (err) {
                 if (err) throw err;
                 console.log("Order has been placed!");
                 console.log("Your total for this order is $" + (quantitySelected * pickedItem.price));
-                setTimeout(bamazonCustomer, 3000);
+                inquirer.prompt([{
+                    type: "confirm",
+                    message: "Are you done ordering items?",
+                    name: "confirm",
+                    default: true
+                  }])
+                  .then(function (finished) {
+                    if (finished.confirm) {
+                      console.log("Thank you come again!");
+                      connection.end();
+                    } else {
+                      setTimeout(bamazonCustomer, 3000);
+                    }
+                  })
+
               });
             }
           });
@@ -124,4 +136,42 @@ function bamazonAdmin() {
   console.log("|Starting Administrator App!|");
   console.log("|                           |");
   console.log("____________________________\n");
+  connection.query("SELECT * FROM products", function (err, results) {
+    if (err) throw err;
+    setTimeout(goAdmin, 3000);
+
+    function goAdmin() {
+      inquirer
+        .prompt([{
+          type: "list",
+          message: "What would you like to do?",
+          choices: ["View Products for Sale", "View Low Inventory", "Add to Inventory", "Add New Product"],
+          name: "adminOption"
+        }])
+        .then(function (res) {
+          if (res.adminOption === "View Products for Sale") {
+            console.log("Item ID | Item |  Department | Price | Stock");
+            console.log("____________________________________________");
+            for (var i = 0; i < results.length; i++) {
+              console.log(results[i].item_id + " | " + results[i].product_name + " | " + results[i].department_name + " | $" + results[i].price + " | " + results[i].stock_quantity);
+            }
+            goAdmin();
+          } else if (res.adminOption === "View Low Inventory") {
+
+            console.log("low inv");
+            goAdmin();
+          } else if (res.adminOption === "Add to Inventory") {
+            console.log("add to inv");
+            goAdmin();
+          } else if (res.adminOption === "Add New Product") {
+            console.log("add new stuff");
+            goAdmin();
+          } else {
+            console.log("Please make a choice!");
+            goAdmin();
+          }
+        })
+    };
+
+  })
 }
