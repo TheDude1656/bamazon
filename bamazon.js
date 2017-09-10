@@ -41,6 +41,8 @@ function start() {
     })
 };
 
+
+
 // function that starts if Customer is chosen in first question
 function bamazonCustomer() {
   console.log("________________________");
@@ -48,42 +50,70 @@ function bamazonCustomer() {
   console.log("|Starting Customer App!|");
   console.log("|                      |");
   console.log("________________________\n");
-  connection.query("SELECT * FROM products", function(err, results) {
-    if (err) throw err;
-    inquirer
-      .prompt([{
-        type: "rawlist",
-        message: "Which item would you like to view?",
-        choices: function() {
-          var itemsArr = [];
-          for (var i = 0; i < results.length; i++) {
-            itemsArr.push(results[i].product_name);
-          }
-          return itemsArr;
-        },
-        name: "itemlist",
-      }, {
-        type: "input",
-        message: "How many would you like to buy?",
-        validate: function(amountbuy) {
-          var reg = /^\d+$/;
-          return reg.test(amountbuy) || "This should be a number!";
-        },
-        name: "amountbuy"
-      }])
-      .then(function(stuff) {
-        var pickedItem;
-        for (var i = 0; i < results.length; i++) {
-          if (results[i].product_name === stuff.itemlist) {
-            pickedItem = results[i];
-          }
-        }
-        if (pickedItem.stock_quantity < stuff.amountbuy) {
-          console.log("I am sorry there is not enough stock for this amount!");
-        } else {
-          console.log("placeholder");
-          // connection.query("UPDATE ")
-        }
-      });
-  });
+  setTimeout(function() {
+    connection.query("SELECT * FROM products", function(err, results) {
+      if (err) throw err;
+      console.log("Item |  Price | Stock");
+      console.log("_____________________");
+      for (var i = 0; i < results.length; i++) {
+
+        console.log(results[i].product_name + " | " + "$" + results[i].price + " | " + results[i].stock_quantity);
+      }
+      setTimeout(startQuestions, 6000);
+
+      function startQuestions() {
+        inquirer
+          .prompt([{
+            type: "list",
+            message: "Which item would you like to buy?",
+            choices: function() {
+              var itemsArr = [];
+              for (var i = 0; i < results.length; i++) {
+                itemsArr.push(results[i].product_name);
+              }
+              return itemsArr;
+            },
+            name: "itemlist",
+          }, {
+            type: "input",
+            message: "How many would you like to buy?",
+            validate: function(amountbuy) {
+              var reg = /^\d+$/;
+              return reg.test(amountbuy) || "This should be a number!";
+            },
+            name: "amountbuy"
+          }])
+          .then(function(stuff) {
+            var pickedItem;
+            for (var i = 0; i < results.length; i++) {
+              if (results[i].product_name === stuff.itemlist) {
+                pickedItem = results[i];
+              }
+            }
+            if (pickedItem.stock_quantity < stuff.amountbuy) {
+              console.log("I am sorry there is not enough stock for this amount!");
+              console.log("We only have " + pickedItem.stock_quantity + " in stock!");
+              setTimeout(startQuestions, 1000);
+            } else {
+              console.log("Great!  Let me place that order for you!");
+              var itemSelected = pickedItem.item_id;
+              var quantitySelected = stuff.amountbuy;
+              connection.query("UPDATE products SET ? WHERE ?", [{
+                  stock_quantity: pickedItem.stock_quantity - quantitySelected
+                },
+                {
+                  item_id: itemSelected
+                }
+              ], function(err) {
+                if (err) throw err;
+                console.log("Order has been placed!");
+                console.log("Your total for this order is $" + (quantitySelected * pickedItem.price));
+                setTimeout(bamazonCustomer, 3000);
+              });
+            }
+          });
+      };
+    });
+  }, 3000);
+
 };
