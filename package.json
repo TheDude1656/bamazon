@@ -1,0 +1,10 @@
+{
+  "name": "bamazon",
+  "version": "1.0.0",
+  "description": "amazon store clone as well as site management",
+  "main": "bamazon.js",
+  "dependencies": {
+    "inquirer": "",
+    "mysql": ""
+  }
+}
