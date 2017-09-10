@@ -22,7 +22,7 @@ connection.connect(function(err) {
   start();
 });
 
-// funciton which starts the bamazon app - chooses whether the user is a customer or admin
+// function which starts the bamazon app - chooses whether the user is a customer or admin
 function start() {
   inquirer
     .prompt([{
@@ -117,3 +117,11 @@ function bamazonCustomer() {
   }, 3000);
 
 };
+
+function bamazonAdmin() {
+  console.log("____________________________");
+  console.log("|                           |");
+  console.log("|Starting Administrator App!|");
+  console.log("|                           |");
+  console.log("____________________________\n");
+}
