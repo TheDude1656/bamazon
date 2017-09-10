@@ -50,30 +50,27 @@ function bamazonCustomer() {
   console.log("________________________\n");
   connection.query("SELECT * FROM products", function(err, results) {
     if (err) throw err;
-
     inquirer
       .prompt([{
-          name: "itemlist",
-          type: "rawlist",
-          choices: function() {
-            var itemsArr = [];
-            for (var i = 0; i < results.length; i++) {
-              itemsArr.push(results[i].product_name);
-            }
-            return itemsArr;
-          },
-          message: "Which item would you like to view?"
-        },
-        {
-          name: "amountbuy",
-          type: "input",
-          message: "How many would you like to buy?",
-          validate: function(amountbuy) {
-            var reg = /^\d+$/;
-            return reg.test(amountbuy) || "This should be a number!";
+        type: "rawlist",
+        message: "Which item would you like to view?",
+        choices: function() {
+          var itemsArr = [];
+          for (var i = 0; i < results.length; i++) {
+            itemsArr.push(results[i].product_name);
           }
-        }
-      ])
+          return itemsArr;
+        },
+        name: "itemlist",
+      }, {
+        type: "input",
+        message: "How many would you like to buy?",
+        validate: function(amountbuy) {
+          var reg = /^\d+$/;
+          return reg.test(amountbuy) || "This should be a number!";
+        },
+        name: "amountbuy"
+      }])
       .then(function(stuff) {
         var pickedItem;
         for (var i = 0; i < results.length; i++) {
@@ -89,3 +86,4 @@ function bamazonCustomer() {
         }
       });
   });
+};
