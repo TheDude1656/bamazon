@@ -32,7 +32,7 @@ function start() {
       choices: ["Customer", "Administrator"]
     }])
     .then(function(res) {
-      console.log(res);
+      console.log(res.customerOrAdmin);
       if (res.customerOrAdmin === "Customer") {
         bamazonCustomer();
       } else {
@@ -68,24 +68,24 @@ function bamazonCustomer() {
           name: "amountbuy",
           type: "input",
           message: "How many would you like to buy?",
-          validate: validInt
+          validate: function(amountbuy) {
+            var reg = /^\d+$/;
+            return reg.test(amountbuy) || "This should be a number!";
+          }
         }
       ])
       .then(function(stuff) {
         var pickedItem;
         for (var i = 0; i < results.length; i++) {
-          pickedItem = results[i];
+          if (results[i].product_name === stuff.itemlist) {
+            pickedItem = results[i];
+          }
+        }
+        if (pickedItem.stock_quantity < stuff.amountbuy) {
+          console.log("I am sorry there is not enough stock for this amount!");
+        } else {
+          console.log("placeholder");
+          // connection.query("UPDATE ")
         }
       });
-    if (pickedItem.stock_quantity < parseInt(stuff.amountbuy)) {
-      console.log("I am sorry there is not enough stock for this amount!");
-    } else {
-      // connection.query("UPDATE ")
-    }
   });
-};
-
-function validInt(int) {
-  var reg = /^\d+$/;
-  return reg.test(int) || "This should be a number!";
-};
