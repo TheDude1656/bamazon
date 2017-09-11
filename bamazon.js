@@ -141,9 +141,6 @@ function bamazonAdmin() {
   function goAdmin() {
     connection.query("SELECT * FROM products", function (err, results) {
       if (err) throw err;
-
-
-
       inquirer
         .prompt([{
           type: "list",
@@ -165,7 +162,6 @@ function bamazonAdmin() {
                 console.log("Item low on stock: " + results[i].product_name + " | QTY: " + results[i].stock_quantity);
               }
             }
-
             goAdmin();
           } else if (res.adminOption === "Add New Product") {
             inquirer
@@ -246,12 +242,8 @@ function bamazonAdmin() {
                   goAdmin();
                 })
               })
-
-
           }
         })
-
-
     })
   };
 }
