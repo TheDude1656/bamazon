@@ -136,11 +136,14 @@ function bamazonAdmin() {
   console.log("|Starting Administrator App!|");
   console.log("|                           |");
   console.log("____________________________\n");
-  connection.query("SELECT * FROM products", function (err, results) {
-    if (err) throw err;
-    setTimeout(goAdmin, 3000);
+  setTimeout(goAdmin, 3000);
 
-    function goAdmin() {
+  function goAdmin() {
+    connection.query("SELECT * FROM products", function (err, results) {
+      if (err) throw err;
+
+
+
       inquirer
         .prompt([{
           type: "list",
@@ -157,21 +160,98 @@ function bamazonAdmin() {
             }
             goAdmin();
           } else if (res.adminOption === "View Low Inventory") {
+            for (var i = 0; i < results.length; i++) {
+              if (results[i].stock_quantity < 5) {
+                console.log("Item low on stock: " + results[i].product_name + " | QTY: " + results[i].stock_quantity);
+              }
+            }
 
-            console.log("low inv");
-            goAdmin();
-          } else if (res.adminOption === "Add to Inventory") {
-            console.log("add to inv");
             goAdmin();
           } else if (res.adminOption === "Add New Product") {
-            console.log("add new stuff");
-            goAdmin();
-          } else {
-            console.log("Please make a choice!");
-            goAdmin();
+            inquirer
+              .prompt([{
+                  type: "input",
+                  message: "What is the item name?",
+                  name: "itemAdd"
+                },
+                {
+                  type: "input",
+                  message: "How many are you selling?",
+                  name: "itemQty",
+                  validate: function (qtyadd) {
+                    var reg = /^\d+$/;
+                    return reg.test(qtyadd) || "This should be a number!";
+                  }
+                },
+                {
+                  type: "input",
+                  message: "How much is this product?",
+                  name: "itemPrice",
+                  validate: function (itemPrice) {
+                    var isNumber = /^(?!0\.00)[1-9]\d{0,2}(,\d{3})*(\.\d\d)?$/;
+                    return isNumber.test(itemPrice) || "This needs to be a price!(i.e. 2.99)";
+                  }
+                },
+                {
+                  type: "input",
+                  message: "What is the department this is sold in?",
+                  name: "itemDepartment"
+                }
+              ])
+              .then(function (results) {
+                console.log("Item to add")
+                console.log("Item: " + results.itemAdd + "\nQty: " + results.itemQty + "\nPrice: $" + results.itemPrice + "\nDepartment: " + results.itemDepartment);
+                connection.query("INSERT INTO products SET ?", {
+                  product_name: results.itemAdd,
+                  department_name: results.itemDepartment,
+                  price: results.itemPrice,
+                  stock_quantity: results.itemQty
+                }, function (err) {
+                  if (err) throw err;
+                  console.log("Item has been added!");
+                  goAdmin();
+                })
+
+              });
+          } else if (res.adminOption === "Add to Inventory") {
+            inquirer
+              .prompt([{
+                type: "list",
+                message: "What item would you like to update the inventory for?",
+                choices: function () {
+                  var itemsArr = [];
+                  for (var i = 0; i < results.length; i++) {
+                    itemsArr.push(results[i].product_name);
+                  }
+                  return itemsArr;
+                },
+                name: "invAdd"
+              }, {
+                type: "input",
+                message: "Amount to add to existing inventory?",
+                name: "invAddQty",
+                validate: function (invqtyadd) {
+                  var reg = /^\d+$/;
+                  return reg.test(invqtyadd) || "This should be a number!";
+                }
+              }])
+              .then(function (results) {
+                connection.query("UPDATE products SET ? WHERE ?", [{
+                  stock_quantity: stock_quantity + results.invAddQty
+                }, {
+                  product_name: results.invAdd
+                }], function (err) {
+                  if (err) throw err;
+                  console.log("Item: " + results.invAdd + "\nQty added: " + results.invAddQty + "\nItem has been updated in db!");
+                  goAdmin();
+                })
+              })
+
+
           }
         })
-    };
 
-  })
+
+    })
+  };
 }
