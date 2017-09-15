@@ -232,11 +232,7 @@ function bamazonAdmin() {
                 }
               }])
               .then(function (results) {
-                connection.query("UPDATE products SET ? WHERE ?", [{
-                  stock_quantity: stock_quantity + results.invAddQty
-                }, {
-                  product_name: results.invAdd
-                }], function (err) {
+                connection.query("UPDATE products SET stock_quantity=stock_quantity+ ? WHERE product_name=?", [results.invAddQty, results.invAdd], function (err) {
                   if (err) throw err;
                   console.log("Item: " + results.invAdd + "\nQty added: " + results.invAddQty + "\nItem has been updated in db!");
                   goAdmin();
